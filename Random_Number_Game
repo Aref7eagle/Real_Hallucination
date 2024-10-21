@@ -1,0 +1,113 @@
+import random
+import inflect
+
+
+def get_difficulty_level():
+    valid_dif_lvls = ["Easy", "Medium", "Hard"]
+    while True:
+        dif_lvl = input("Choose your difficulty level: ").strip().capitalize()
+        if dif_lvl in valid_dif_lvls:
+            return dif_lvl
+        print("Make sure you have typed a valid difficulty level")
+
+
+def generate_random_number(dif_lvl):
+    random_ranges = {"Easy": (0, 10), "Medium": (0, 100), "Hard": (0, 1000)}
+    return random.randint(*random_ranges[dif_lvl])
+
+
+def process_guess(user_guess, random_number):
+    if user_guess > random_number:
+        return "Try lower."
+    elif user_guess < random_number:
+        return "Try higher."
+    else:
+        return "Congratulations you got it!"
+
+
+def provide_hint(dif_lvl, difference):
+    if dif_lvl == "Easy":
+        if difference <= 2:
+            return "Hint: You're very close!"
+        elif difference <= 5:
+            return "Hint: You're getting warm!"
+    elif dif_lvl == "Medium":
+        if difference <= 10:
+            return "Hint: You're close!"
+        elif difference <= 20:
+            return "Hint: You're getting warm!"
+    elif dif_lvl == "Hard":
+        if difference <= 50:
+            return "Hint: You're close!"
+        elif difference <= 100:
+            return "Hint: You're getting warm!"
+    return None
+
+
+def play_game():
+    print(
+        """Welcome to the number guessing game!
+        You will be asked to choose a difficulty setting
+        type Easy, Medium, or Hard to continue.
+        """
+    )
+
+    dif_lvl = get_difficulty_level()
+    random_number = generate_random_number(dif_lvl)
+    max_guesses = 15 if dif_lvl == "Hard" else 10 if dif_lvl == "Medium" else 5
+    print(f"You have chosen the {dif_lvl} Level. Good Luck!")
+
+    want_hints = input("Do you want to use hints? (yes/no): ").strip().lower()
+    engine = inflect.engine()
+    guess_counter = 0
+    hints_used = 0
+
+    for _ in range(max_guesses):
+        guess_current_time_ordinal = engine.ordinal(guess_counter + 1)
+        while True:
+            user_guess = input(f"Enter your {guess_current_time_ordinal} guess: ")
+            if user_guess.isdigit():
+                user_guess = int(user_guess)
+                if (
+                    0
+                    <= user_guess
+                    <= (
+                        10
+                        if dif_lvl == "Easy"
+                        else 100 if dif_lvl == "Medium" else 1000
+                    )
+                ):
+                    break
+                else:
+                    print("You are out of range, do not waste your guesses.")
+            else:
+                print("Only enter a number.")
+
+        guess_counter += 1
+        result = process_guess(user_guess, random_number)
+        print(result)
+
+        if result.startswith("Congratulations"):
+            break
+
+        # Providing hints
+        if want_hints == "yes":
+            difference = abs(user_guess - random_number)
+            hint = provide_hint(dif_lvl, difference)
+            if hint:
+                print(hint)
+                hints_used += 1
+
+    print(f"Number of guesses: {guess_counter}")
+    final_point = (max_guesses - guess_counter - hints_used) * (
+        10 if dif_lvl == "Easy" else 30 if dif_lvl == "Medium" else 60
+    )
+    print(f"Your score is: {final_point}")
+
+
+while True:
+    play_game()
+    play_again = input("Do you want to play again? (Yes/No): ").strip().capitalize()
+    if play_again != "Yes":
+        print("Thanks for playing!")
+        break
